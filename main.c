@@ -90,6 +90,41 @@ void print_board(Row* board) {
 	nanosleep(&(struct timespec){0,2*99999999}, NULL);
 }
 
+void process_hit(Row* board, Pos pos) {
+	Tile* tile = &board[pos.y][pos.x];
+	Tile* front = &board[pos.y+2][pos.x];
+	Tile* left = &board[pos.y+1][pos.x-1];
+	Tile* right = &board[pos.y+1][pos.x+1];
+	if (front->color<3) { // nothing
+		// ok
+		printf("HIT (nothing)\n");
+		goto side;
+	} else if (front->color==3) { // powerup
+		// kill both
+		printf("HIT (powerup)\n");
+		*tile = (Tile){0};
+		*front = (Tile){0};
+	} else { // building
+		if (tile->color == front->color && front->color != left->color && front->color != right->color) { // hit corner
+			// todo: break all connected
+			printf("HIT (corner)\n");
+		} else { // otherwise
+		side:;
+			if (left->color>3) {
+				printf("HIT (left)\n");
+				*left = (Tile){tile->color, 0};
+			}
+			if (right->color>3) {
+				printf("HIT (right)\n");
+				*right = (Tile){tile->color, 0};
+			}
+			// now do the flood fill algorithm:
+			// (todo)
+		}
+	}
+}
+
+// make this just do one step instead.
 void shoot(Row* board, Tile tile, int x) {
 	int y = x%2 ? 0 : 1;
 	
@@ -97,33 +132,19 @@ void shoot(Row* board, Tile tile, int x) {
 		Tile hit = board[y+2][x];
 		Tile left = board[y+1][x-1];
 		Tile right = board[y+1][x+1];
-		int opt = !!left.color<<8 | !!hit.color<<4 | !!right.color;
 		int dir = 0;
-		switch (opt) {
-		case 0x000:
+		if (!left.color && !right.color && !hit.color) {
+			printf("slide\n");
 			y+=2;
 			board[y][x] = tile;
 			print_board(board);
 			board[y][x] = (Tile){0};
-			printf("slide\n");
-			break;
-		case 0x010:
-			printf("hit point\n");
+		} else if (!left.color == !right.color) {
+			printf("hit straight\n");
 			goto hit;
-		case 0x111:
-		case 0x101:
-			printf("hit indent\n");
-			goto hit;
-		case 0x110:
-		case 0x100:
-			dir = 1;
-			printf("slide to the right\n");
-			goto slide;
-		case 0x011:
-		case 0x001:
-			dir = -1;
-		slide:;
-			printf("slide to the left\n");
+		} else {
+			printf("slide diagonal\n");
+			dir = left.color ? 1 : -1;
 			while (1) {
 				y+=1;
 				x+=dir;
@@ -133,7 +154,7 @@ void shoot(Row* board, Tile tile, int x) {
 				board[y][x] = (Tile){0};
 				
 				Tile hit = board[y+1][x+dir];
-				if (hit.color==1)
+				if (hit.color==1) // wall bounce
 					dir = -dir;
 				if (hit.color)
 					goto hit;
@@ -142,6 +163,7 @@ void shoot(Row* board, Tile tile, int x) {
 	}
  hit:;
 	board[y][x] = tile;
+	process_hit(board, (Pos){x,y});
 }
 
 void main() {
