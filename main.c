@@ -94,11 +94,10 @@ void flood(Tile* tile) {
 	if (color==tr->color) flood(tr);
 }
 
-void process_hit(Row* board, Pos pos) {
-	Tile* tile = &board[pos.y][pos.x];
-	Tile* front = &board[pos.y+2][pos.x];
-	Tile* left = &board[pos.y+1][pos.x-1];
-	Tile* right = &board[pos.y+1][pos.x+1];
+void process_hit(Tile* tile) {
+	Tile* front = tile+2*BOARD_WIDTH;
+	Tile* left = tile+BOARD_WIDTH-1;
+	Tile* right = tile+BOARD_WIDTH+1;
 	if (front->color<3) { // nothing
 		// ok
 		printf("HIT (nothing)\n");
@@ -173,7 +172,7 @@ void shoot(Row* board, Tile tile, int x) {
 	}
  hit:;
 	board[y][x] = tile;
-	process_hit(board, (Pos){x,y});
+	process_hit(&board[y][x]);
 }
 
 void main() {
