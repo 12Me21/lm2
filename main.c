@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #define BOARD_WIDTH 11
-#define BOARD_HEIGHT 20
+#define BOARD_HEIGHT 21
 
 typedef struct {
 	unsigned char color: 4; // 0 = empty, 1 = wall, 2 = powerup, 4 = red ... 9 = purple
@@ -69,15 +69,15 @@ void print_tile(Tile* tile) {
 
 void print_board(Row* board) {
 	for (int y=BOARD_HEIGHT-1; y>=0; y-=2) {
-		for (int x=0; x<BOARD_WIDTH; x+=2) {
+		printf("  ");
+		for (int x=1; x<BOARD_WIDTH; x+=2) {
 			print_tile(board_get(board, (Pos){x,y}));
 			printf("");
 		}
 		printf("\n");
-		if (y>0) {
-			printf("  ");
-			for (int x=1; x<BOARD_WIDTH; x+=2) {
-				print_tile(board_get(board, (Pos){x,y+1}));
+		if (y!=0) {
+			for (int x=0; x<BOARD_WIDTH; x+=2) {
+				print_tile(board_get(board, (Pos){x,y-1}));
 				printf("");
 			}
 			printf("\n");
@@ -85,31 +85,41 @@ void print_board(Row* board) {
 	}
 }
 
-/*void shoot(Row* board, Tile tile, int x) {
-	int y;
-	for (y=BOARD_HEIGHT*2-2; y>=-2; y-=2) {
-		Tile hit = board[y][x];
-		if (hit.color) {
-			Tile left = board[];
+void shoot(Row* board, Tile tile, int x) {
+	int y = x%2 ? 0 : 1;
+	
+	while (1) {
+		Tile hit = board[y+2][x];
+		printf("at %d %d\n",x,y);
+		if (hit.color==0) {
+			y+=2;
+			//Tile left = board[];
+			printf("slide\n");
+		} else {
+			printf("hit %d %d\n",x,y);
+			break;
 		}
 	}
-	}*/
+	board[y][x] = tile;
+}
 
 void main() {
 	for (int y=1; y<BOARD_HEIGHT; y+=2) {
 		board[y][0] = (Tile){1};
 		board[y][BOARD_WIDTH-1] = (Tile){1};
 	}
-	for (int x=0; x<BOARD_WIDTH; x+=2) {
-		board[BOARD_HEIGHT-1][x] = (Tile){1};
+	for (int x=0; x<BOARD_WIDTH; x+=1) {
+		board[BOARD_HEIGHT-1-1+(x%2)][x] = (Tile){1};
 	}
 	
-	board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
+	//board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
+	shoot(board, (Tile){3,0}, 2);
 	print_board(board);
 }
 
 //or:
-//       0 1 2 3 4 5 6 7 8 
+//     0 1 2 3 4 5 6 7 8 9 A
+// [8] - # - # - # - # - # -
 // [7] # - # - # - # - # - #
 // [6] - X . X . X . X . X -
 // [5] # . X . X . X . X . #
