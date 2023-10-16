@@ -2,11 +2,12 @@
 #include <time.h>
 
 #define BOARD_WIDTH 11
-#define BOARD_HEIGHT 11
+#define BOARD_HEIGHT 21
 
 typedef struct {
 	unsigned char color: 4; // 0 = empty, 1 = side wall, 2 = pusher, 3 = powerup, 4 = red ... 9 = purple
 	unsigned char size: 4; // 0 = untouched, 1 = touched, 2 = bronze ... 5 = platinum
+	//unsigned char bl:1, br:1, tl:1, tr:1; // connections
 } Tile;
 
 typedef struct {
@@ -15,43 +16,33 @@ typedef struct {
 } Pos;
 
 typedef Tile Row[BOARD_WIDTH];
+Row board[BOARD_HEIGHT] = {0};
+
+/*
+    0 1 2 3 4 5 6 7 8 9 10
+[8] . # . # . # . # . # . 
+[7] | . # . # . # . # . | 
+[6] . X . X . X . X . X . 
+[5] | . X . X . X . X . | 
+[4] . X . X . X . X . X . 
+[3] | . X . X . X . X . | 
+[2] . X . X . X . X . X . 
+[1] | . s . s . s . s . | 
+[0] . s . s . s . s . s . 
+
+s = shooting position
+X = regular tile position
+# = pusher
+| = side walls
+
+*/
+
+// s = shooting position
+// 
 
 Tile* board_get(Row* board, Pos pos) {
 	return &board[pos.y][pos.x];
 }
-
-// tile types:
-// empty
-// powerup × 4
-
-// per color:
-// untouched
-// touched
-// 2x2
-// 3x3
-// 4x4
-// 5x5
-
-// TYPE|red-purple|powerup
-// un  |6         |1 (empty)
-// 1x1 |6         |0
-// 2x2 |6         |1
-// 3x3 |6         |1
-// 4x4 |6         |1
-// 5x5 |6         |1
-// 6x6 |6         |1
-
-//Tile board[BOARD_HEIGHT*2-1][BOARD_WIDTH] = {0};
-//     [0] [1] [2] [3] [4]
-// [0] X   X   X   X   X  
-// [1]   X   X   X   X   ?
-// [2] X   X   X   X   X  
-// [3]   X   X   X   X   ?
-// [4] X   X   X   X   X  
-// [5]   X   X   X   X   ?
-// [6] X   X   X   X   X  
-
-Row board[BOARD_HEIGHT] = {0};
 
 void print_tile(Tile* tile) {
 	if (tile->color==0) {
@@ -67,7 +58,7 @@ void print_tile(Tile* tile) {
 		printf(" <[]> ");
 	}
 	else {
-		printf("\x1B[%dm <{}> \x1B[m", (int[]){101,43,103,102,104,45}[tile->color-4]);
+		printf(" \x1B[%dm<{}>\x1B[m ", (int[]){101,43,103,102,104,45}[tile->color-4]);
 	}
 }
 
@@ -87,7 +78,20 @@ void print_board(Row* board) {
 			printf("\n");
 		}
 	}
-	nanosleep(&(struct timespec){0,2*99999999}, NULL);
+	nanosleep(&(struct timespec){0,99999999}, NULL);
+}
+
+void flood(Tile* tile) {
+	int color = tile->color;
+	*tile = (Tile){0};
+	Tile* bl = tile-BOARD_WIDTH-1;
+	Tile* br = tile-BOARD_WIDTH+1;
+	Tile* tl = tile+BOARD_WIDTH-1;
+	Tile* tr = tile+BOARD_WIDTH+1;
+	if (color==bl->color) flood(bl);
+	if (color==br->color) flood(br);
+	if (color==tl->color) flood(tl);
+	if (color==tr->color) flood(tr);
 }
 
 void process_hit(Row* board, Pos pos) {
@@ -108,6 +112,8 @@ void process_hit(Row* board, Pos pos) {
 		if (tile->color == front->color && front->color != left->color && front->color != right->color) { // hit corner
 			// todo: break all connected
 			printf("HIT (corner)\n");
+			*tile = (Tile){0};
+			flood(front);
 		} else { // otherwise
 		side:;
 			if (left->color>3) {
@@ -127,6 +133,10 @@ void process_hit(Row* board, Pos pos) {
 // make this just do one step instead.
 void shoot(Row* board, Tile tile, int x) {
 	int y = x%2 ? 0 : 1;
+	
+	board[y][x] = tile;
+	print_board(board);
+	board[y][x] = (Tile){0};
 	
 	while (1) {
 		Tile hit = board[y+2][x];
@@ -179,18 +189,7 @@ void main() {
 	shoot(board, (Tile){4,0}, 2);
 	shoot(board, (Tile){5,0}, 3);
 	shoot(board, (Tile){6,0}, 3);
+	shoot(board, (Tile){6,0}, 3);
+	shoot(board, (Tile){6,0}, 3);
 	print_board(board);
 }
-
-//or:
-//     0 1 2 3 4 5 6 7 8 9 A
-// [8] - # - # - # - # - # -
-// [7] # - # - # - # - # - #
-// [6] - X . X . X . X . X -
-// [5] # . X . X . X . X . #
-// [4] - X . X . X . X . X -
-// [3] # . X . X . X . X . #
-// [2] - X . X . X . X . X -
-// [1] # . s . s . s . s . #
-// [0] - s . s . s . s . s -  (s = shooting position)
-
