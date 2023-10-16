@@ -2,7 +2,7 @@
 #include <time.h>
 
 #define BOARD_WIDTH 11
-#define BOARD_HEIGHT 21
+#define BOARD_HEIGHT 11
 
 typedef struct {
 	unsigned char color: 4; // 0 = empty, 1 = side wall, 2 = pusher, 3 = powerup, 4 = red ... 9 = purple
