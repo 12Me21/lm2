@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #define BOARD_WIDTH 5
 #define BOARD_HEIGHT 9
 
@@ -50,8 +52,31 @@ Tile* board_get(Row* board, Pos pos) {
 
 Row board[BOARD_HEIGHT*2-1] = {0};
 
+void print_tile(Tile* tile) {
+	printf("%c", ".pROYGBV"[tile->color]);
+}
+
+void print_board(Row* board) {
+	for (int y=0; y<BOARD_HEIGHT*2-1; y+=2) {
+		if (y>0) {
+			printf("  ");
+			for (int x=1; x<BOARD_WIDTH*2-1; x+=2) {
+				print_tile(board_get(board, (Pos){x,y-1}));
+				printf("   ");
+			}
+			printf("\n");
+		}
+		for (int x=0; x<BOARD_WIDTH*2-1; x+=2) {
+			print_tile(board_get(board, (Pos){x,y}));
+			printf("   ");
+		}
+		printf("\n");
+	}
+}
+
 void main() {
 	board_get(board, (Pos){1,3})[0] = (Tile){2, 0};
+	print_board(board);
 }
 
 //or:
