@@ -90,16 +90,38 @@ void shoot(Row* board, Tile tile, int x) {
 	
 	while (1) {
 		Tile hit = board[y+2][x];
+		Tile left = board[y+1][x-1];
+		Tile right = board[y+1][x+1];
 		printf("at %d %d\n",x,y);
 		if (hit.color==0) {
 			y+=2;
-			//Tile left = board[];
 			printf("slide\n");
 		} else {
 			printf("hit %d %d\n",x,y);
-			break;
+			if (!left.color == !right.color) {
+				// point or indent. piece stays
+				break;
+			}
+			// slide sideways
+			if (!right.color) {
+				while (1) {
+					y+=1;
+					x+=1;
+					if (board[y+1][x+1].color)
+						goto hit;
+				}
+			}
+			if (!left.color) {
+				while (1) {
+					y+=1;
+					x-=1;
+					if (board[y+1][x-1].color)
+						goto hit;
+				}
+			}
 		}
 	}
+ hit:;
 	board[y][x] = tile;
 }
 
@@ -114,6 +136,7 @@ void main() {
 	
 	//board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
 	shoot(board, (Tile){3,0}, 2);
+	shoot(board, (Tile){4,0}, 3);
 	print_board(board);
 }
 
