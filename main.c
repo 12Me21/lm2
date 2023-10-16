@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#define BOARD_WIDTH 5
-#define BOARD_HEIGHT 9
+#define BOARD_WIDTH 11
+#define BOARD_HEIGHT 20
 
 typedef struct {
-	unsigned char color: 4; // 0 = empty, 1 = powerup, 2 = red ... 7 = purple
+	unsigned char color: 4; // 0 = empty, 1 = wall, 2 = powerup, 4 = red ... 9 = purple
 	unsigned char size: 4; // 0 = untouched, 1 = touched, 2 = bronze ... 5 = platinum
 } Tile;
 
@@ -13,7 +13,7 @@ typedef struct {
 	int y;
 } Pos;
 
-typedef Tile Row[BOARD_WIDTH*2-1];
+typedef Tile Row[BOARD_WIDTH];
 
 Tile* board_get(Row* board, Pos pos) {
 	return &board[pos.y][pos.x];
@@ -50,41 +50,72 @@ Tile* board_get(Row* board, Pos pos) {
 // [5]   X   X   X   X   ?
 // [6] X   X   X   X   X  
 
-Row board[BOARD_HEIGHT*2-1] = {0};
+Row board[BOARD_HEIGHT] = {0};
 
 void print_tile(Tile* tile) {
-	printf("%c", ".pROYGBV"[tile->color]);
-}
-
-void print_board(Row* board) {
-	for (int y=0; y<BOARD_HEIGHT*2-1; y+=2) {
-		if (y>0) {
-			printf("  ");
-			for (int x=1; x<BOARD_WIDTH*2-1; x+=2) {
-				print_tile(board_get(board, (Pos){x,y-1}));
-				printf("   ");
-			}
-			printf("\n");
-		}
-		for (int x=0; x<BOARD_WIDTH*2-1; x+=2) {
-			print_tile(board_get(board, (Pos){x,y}));
-			printf("   ");
-		}
-		printf("\n");
+	if (tile->color==0) {
+		printf("<{}>");
+	}
+	else if (tile->color==1) {
+		printf(" ## ");
+	}
+	else if (tile->color==2) {
+		printf("<[]>");
+	}
+	else {
+		printf("\x1B[%dm<{}>\x1B[m", (int[]){101,43,103,102,104,45}[tile->color-2]);
 	}
 }
 
+void print_board(Row* board) {
+	for (int y=BOARD_HEIGHT-1; y>=0; y-=2) {
+		for (int x=0; x<BOARD_WIDTH; x+=2) {
+			print_tile(board_get(board, (Pos){x,y}));
+			printf("");
+		}
+		printf("\n");
+		if (y>0) {
+			printf("  ");
+			for (int x=1; x<BOARD_WIDTH; x+=2) {
+				print_tile(board_get(board, (Pos){x,y+1}));
+				printf("");
+			}
+			printf("\n");
+		}
+	}
+}
+
+/*void shoot(Row* board, Tile tile, int x) {
+	int y;
+	for (y=BOARD_HEIGHT*2-2; y>=-2; y-=2) {
+		Tile hit = board[y][x];
+		if (hit.color) {
+			Tile left = board[];
+		}
+	}
+	}*/
+
 void main() {
-	board_get(board, (Pos){1,3})[0] = (Tile){2, 0};
+	for (int y=1; y<BOARD_HEIGHT; y+=2) {
+		board[y][0] = (Tile){1};
+		board[y][BOARD_WIDTH-1] = (Tile){1};
+	}
+	for (int x=0; x<BOARD_WIDTH; x+=2) {
+		board[BOARD_HEIGHT-1][x] = (Tile){1};
+	}
+	
+	board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
 	print_board(board);
 }
 
 //or:
-//     0 1 2 3 4 5 6 7 8 
-// [0] X . X . X . X . X 
-// [1] . X . X . X . X . 
-// [2] X . X . X . X . X 
-// [3] . X . X . X . X . 
-// [4] X . X . X . X . X 
-// [5] . X . X . X . X . 
-// [6] X . X . X . X . X 
+//       0 1 2 3 4 5 6 7 8 
+// [7] # - # - # - # - # - #
+// [6] - X . X . X . X . X -
+// [5] # . X . X . X . X . #
+// [4] - X . X . X . X . X -
+// [3] # . X . X . X . X . #
+// [2] - X . X . X . X . X -
+// [1] # . s . s . s . s . #
+// [0] - s . s . s . s . s -  (s = shooting position)
+
