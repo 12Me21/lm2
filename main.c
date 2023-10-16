@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <time.h>
 
 #define BOARD_WIDTH 11
 #define BOARD_HEIGHT 21
 
 typedef struct {
-	unsigned char color: 4; // 0 = empty, 1 = wall, 2 = powerup, 4 = red ... 9 = purple
+	unsigned char color: 4; // 0 = empty, 1 = side wall, 2 = pusher, 3 = powerup, 4 = red ... 9 = purple
 	unsigned char size: 4; // 0 = untouched, 1 = touched, 2 = bronze ... 5 = platinum
 } Tile;
 
@@ -54,22 +55,25 @@ Row board[BOARD_HEIGHT] = {0};
 
 void print_tile(Tile* tile) {
 	if (tile->color==0) {
-		printf("<{}>");
+		printf(" <{}> ");
 	}
 	else if (tile->color==1) {
-		printf(" ## ");
+		printf("  ||  ");
 	}
 	else if (tile->color==2) {
-		printf("<[]>");
+		printf(" \\VV/ ");
+	}
+	else if (tile->color==3) {
+		printf(" <[]> ");
 	}
 	else {
-		printf("\x1B[%dm<{}>\x1B[m", (int[]){101,43,103,102,104,45}[tile->color-2]);
+		printf("\x1B[%dm <{}> \x1B[m", (int[]){101,43,103,102,104,45}[tile->color-4]);
 	}
 }
 
 void print_board(Row* board) {
 	for (int y=BOARD_HEIGHT-1; y>=0; y-=2) {
-		printf("  ");
+		printf("   ");
 		for (int x=1; x<BOARD_WIDTH; x+=2) {
 			print_tile(board_get(board, (Pos){x,y}));
 			printf("");
@@ -83,6 +87,7 @@ void print_board(Row* board) {
 			printf("\n");
 		}
 	}
+	nanosleep(&(struct timespec){0,2*99999999}, NULL);
 }
 
 void shoot(Row* board, Tile tile, int x) {
@@ -92,32 +97,53 @@ void shoot(Row* board, Tile tile, int x) {
 		Tile hit = board[y+2][x];
 		Tile left = board[y+1][x-1];
 		Tile right = board[y+1][x+1];
-		printf("at %d %d\n",x,y);
-		if (hit.color==0) {
+		int opt = !!left.color<<8 | !!hit.color<<4 | !!right.color;
+		switch (opt) {
+		case 0x000:
 			y+=2;
+			board[y][x] = tile;
+			print_board(board);
+			board[y][x] = (Tile){0};
 			printf("slide\n");
-		} else {
-			printf("hit %d %d\n",x,y);
-			if (!left.color == !right.color) {
-				// point or indent. piece stays
-				break;
-			}
-			// slide sideways
-			if (!right.color) {
-				while (1) {
-					y+=1;
-					x+=1;
-					if (board[y+1][x+1].color)
-						goto hit;
+			break;
+		case 0x010:
+			printf("hit point\n");
+			goto hit;
+		case 0x111:
+		case 0x101:
+			printf("hit indent\n");
+			goto hit;
+		case 0x110:
+		case 0x100:
+			printf("slide to the right\n");
+			while (1) {
+				y+=1;
+				x+=1;
+				board[y][x] = tile;
+				print_board(board);
+				board[y][x] = (Tile){0};
+			right:;
+				if (board[y+1][x+1].color==1) {
+					goto left;
 				}
+				if (board[y+1][x+1].color)
+					goto hit;
 			}
-			if (!left.color) {
-				while (1) {
-					y+=1;
-					x-=1;
-					if (board[y+1][x-1].color)
-						goto hit;
+		case 0x011:
+		case 0x001:
+			printf("slide to the left\n");
+			while (1) {
+				y+=1;
+				x-=1;
+				board[y][x] = tile;
+				print_board(board);
+				board[y][x] = (Tile){0};
+			left:;
+				if (board[y+1][x-1].color==1) {
+					goto right;
 				}
+				if (board[y+1][x-1].color)
+					goto hit;
 			}
 		}
 	}
@@ -131,12 +157,13 @@ void main() {
 		board[y][BOARD_WIDTH-1] = (Tile){1};
 	}
 	for (int x=0; x<BOARD_WIDTH; x+=1) {
-		board[BOARD_HEIGHT-1-1+(x%2)][x] = (Tile){1};
+		board[BOARD_HEIGHT-1-1+(x%2)][x] = (Tile){2};
 	}
 	
 	//board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
-	shoot(board, (Tile){3,0}, 2);
-	shoot(board, (Tile){4,0}, 3);
+	shoot(board, (Tile){4,0}, 2);
+	shoot(board, (Tile){5,0}, 3);
+	shoot(board, (Tile){6,0}, 3);
 	print_board(board);
 }
 
