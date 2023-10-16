@@ -1,0 +1,76 @@
+checkerboard (fixed width, grows vertically):
+    0 1 2 3 4 5 6 7 8 9 10
+[8] . # . # . # . # . # . 
+[7] | . # . # . # . # . | 
+[6] . X . X . X . X . X . 
+[5] | . X . ^ . X . X . | 
+[4] . X . < . > . ^ . X . 
+[3] | . X . v . < . > . | 
+[2] . X . X . X . v . X . 
+[1] | . s . s . s . s . | 
+[0] . s . s . s . s . s . 
+ down = x  , y-2
+   up = x  , y+2
+ left = x-2, y
+right = x+2, y
+   dl = x-1, y-1
+   dr = x+1, y-1
+   ul = x-1, y+1
+   ur = x+1, y+1
+
+diagonal (impractical, grows in both dimensions):
+      | # 
+    | X # # 
+  | X X X # # 
+| X X < ^ X # # 
+s s X v > X X # # 
+  s s X X X X X | 
+    s s X X X | 
+      s s X | 
+        s | 
+ down = x-1, y-1
+   up = x+1, y+1
+ left = x-1, y+1
+right = x+1, y-1
+   dl = x-1, y
+   dr = x  , y-1
+   ul = x  , y+1
+   ur = x+1, y
+
+diagonal, skew right (impractical, grows in both dimensions):
+              | # 
+          | X # # 
+      | X X X # # 
+  | X X < ^ X # # 
+s s X v > X X # # 
+s s X X X X X | 
+s s X X X | 
+s s X | 
+s | 
+ down = x-2, y-1
+   up = x+2, y+1
+ left = x  , y+1
+right = x  , y-1
+   dl = x-1, y
+   dr = x-1, y-1
+   ul = x+1, y+1
+   ur = x+1, y
+
+diagonal, skew left (fixed width, grows vertically):
+| # 
+| X # # 
+| X X X # # 
+| X X < ^ X # # 
+  s s X v > X X # # 
+      s s X < ^ X X | 
+          s s v > X | 
+              s s X | 
+                  s | 
+ down = x  , y-1
+   up = x  , y+1
+ left = x-2, y+1
+right = x+2, y-1
+   dl = x-1, y
+   dr = x+1, y-1
+   ul = x-1, y+1
+   ur = x+1, y
