@@ -130,49 +130,52 @@ void process_hit(Tile* tile) {
 }
 
 // make this just do one step instead.
-void shoot(Row* board, Tile tile, int x) {
-	int y = x%2 ? 0 : 1;
+void shoot(Row* board, Tile new, int x) {
+	Tile* tile = &board[x%2 ? 0 : 1][x];
 	
-	board[y][x] = tile;
+	*tile = new;
 	print_board(board);
-	board[y][x] = (Tile){0};
+	*tile = (Tile){0};
 	
 	while (1) {
-		Tile hit = board[y+2][x];
-		Tile left = board[y+1][x-1];
-		Tile right = board[y+1][x+1];
+		
+		Tile* front = tile+2*BOARD_WIDTH;
+		Tile* left = tile+BOARD_WIDTH-1;
+		Tile* right = tile+BOARD_WIDTH+1;
 		int dir = 0;
-		if (!left.color && !right.color && !hit.color) {
+		if (!left->color && !right->color && !front->color) {
 			printf("slide\n");
-			y+=2;
-			board[y][x] = tile;
+			tile = front;
+			*tile = new;
 			print_board(board);
-			board[y][x] = (Tile){0};
-		} else if (!left.color == !right.color) {
+		   *tile = (Tile){0};
+		} else if (!left->color == !right->color) {
 			printf("hit straight\n");
 			goto hit;
 		} else {
 			printf("slide diagonal\n");
-			dir = left.color ? 1 : -1;
+			// start sliding
+			dir = left->color ? 1 : -1;
+			tile += BOARD_WIDTH+dir;
 			while (1) {
-				y+=1;
-				x+=dir;
-				
-				board[y][x] = tile;
+				*tile = new;
 				print_board(board);
-				board[y][x] = (Tile){0};
+				*tile = (Tile){0};
 				
-				Tile hit = board[y+1][x+dir];
-				if (hit.color==1) // wall bounce
+				Tile* hit = tile+BOARD_WIDTH+dir;
+				if (hit->color==1) { // wall bounce
 					dir = -dir;
-				if (hit.color)
+					hit = tile+BOARD_WIDTH+dir;
+				}
+				if (hit->color)
 					goto hit;
+				tile = hit;
 			}
 		}
 	}
  hit:;
-	board[y][x] = tile;
-	process_hit(&board[y][x]);
+	*tile = new;
+	process_hit(tile);
 }
 
 void main() {
