@@ -187,11 +187,13 @@ void main() {
 		board[BOARD_HEIGHT-1-1+(x%2)][x] = (Tile){2};
 	}
 	
+	board[11][2] = (Tile){9};
+	
 	//board_get(board, (Pos){2,4})[0] = (Tile){2, 0};
 	shoot(board, (Tile){4,0}, 2);
 	shoot(board, (Tile){5,0}, 3);
 	shoot(board, (Tile){6,0}, 3);
 	shoot(board, (Tile){6,0}, 3);
-	shoot(board, (Tile){6,0}, 3);
+	shoot(board, (Tile){6,0}, 7);
 	print_board(board);
 }
