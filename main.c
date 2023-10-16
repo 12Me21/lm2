@@ -98,6 +98,7 @@ void shoot(Row* board, Tile tile, int x) {
 		Tile left = board[y+1][x-1];
 		Tile right = board[y+1][x+1];
 		int opt = !!left.color<<8 | !!hit.color<<4 | !!right.color;
+		int dir = 0;
 		switch (opt) {
 		case 0x000:
 			y+=2;
@@ -115,34 +116,26 @@ void shoot(Row* board, Tile tile, int x) {
 			goto hit;
 		case 0x110:
 		case 0x100:
+			dir = 1;
 			printf("slide to the right\n");
-			while (1) {
-				y+=1;
-				x+=1;
-				board[y][x] = tile;
-				print_board(board);
-				board[y][x] = (Tile){0};
-			right:;
-				if (board[y+1][x+1].color==1) {
-					goto left;
-				}
-				if (board[y+1][x+1].color)
-					goto hit;
-			}
+			goto slide;
 		case 0x011:
 		case 0x001:
+			dir = -1;
+		slide:;
 			printf("slide to the left\n");
 			while (1) {
 				y+=1;
-				x-=1;
+				x+=dir;
+				
 				board[y][x] = tile;
 				print_board(board);
 				board[y][x] = (Tile){0};
-			left:;
-				if (board[y+1][x-1].color==1) {
-					goto right;
-				}
-				if (board[y+1][x-1].color)
+				
+				Tile hit = board[y+1][x+dir];
+				if (hit.color==1)
+					dir = -dir;
+				if (hit.color)
 					goto hit;
 			}
 		}
